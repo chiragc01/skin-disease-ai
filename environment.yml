@@ -1,0 +1,9 @@
+name: skinai
+dependencies:
+  - python=3.10
+  - tensorflow
+  - numpy
+  - pandas
+  - scikit-learn
+  - pillow
+  - tqdm
