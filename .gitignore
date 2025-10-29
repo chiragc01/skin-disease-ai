@@ -1,0 +1,23 @@
+# Virtual environment
+skinai/
+venv/
+.env/
+
+# Data
+data/
+*.csv
+*.jpg
+*.jpeg
+*.png
+
+# Model checkpoints (optional)
+*.h5
+*.ckpt
+
+# Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.db
