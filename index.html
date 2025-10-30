@@ -14,37 +14,40 @@
   <script>
     async function predict() {
       const fileInput = document.getElementById("imageUpload");
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "⏳ Predicting... please wait...";
+
       if (!fileInput.files.length) {
         alert("Please upload an image first!");
         return;
       }
 
       const formData = new FormData();
-      // ✅ Corrected ID name here
       formData.append("file", fileInput.files[0]);
 
       try {
         const response = await fetch("https://skin-disease-ai-8ypl.onrender.com/predict", {
           method: "POST",
           body: formData,
+          mode: "cors"
         });
 
+        const data = await response.json();
+
         if (!response.ok) {
-          const err = await response.text();
-          throw new Error(err);
+          throw new Error(data.error || "Prediction failed");
         }
 
-        const data = await response.json();
-        document.getElementById("result").innerHTML = `
-          <h3>Predicted: ${data.full_name}</h3>
+        resultDiv.innerHTML = `
+          <h3>🧠 Predicted Disease: ${data.full_name}</h3>
           <p><b>Label:</b> ${data.predicted_label}</p>
           <p><b>Confidence:</b> ${data.confidence.toFixed(2)}%</p>
           <p><b>Cause:</b> ${data.cause}</p>
           <p><b>Habit:</b> ${data.habit}</p>
         `;
       } catch (error) {
-        console.error(error);
-        document.getElementById("result").innerHTML = "❌ Error predicting. Please try again.";
+        console.error("Prediction Error:", error);
+        resultDiv.innerHTML = `❌ Error predicting: ${error.message}`;
       }
     }
   </script>
