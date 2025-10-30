@@ -1,23 +1,26 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing.image import img_to_array, load_img
+from tensorflow.keras.preprocessing.image import load_img, img_to_array
 import numpy as np
+import json
 import os
 
 app = Flask(__name__)
+CORS(app)
 
-# -------------------------------
-# Load model once at startup
-# -------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "saved_models", "skin_disease_model.h5")
+INFO_PATH = os.path.join(BASE_DIR, "data", "disease_info.json")
 
-print("⏳ Loading model...")
 model = load_model(MODEL_PATH)
-print("✅ Model loaded successfully!")
+with open(INFO_PATH, "r") as f:
+    disease_info = json.load(f)
 
-# Define your class names (update with your real ones)
-CLASSES = ["bkl", "df", "mel", "nv", "vasc", "bcc", "akiec"]
+label_mapping = {
+    0: 'bkl', 1: 'df', 2: 'mel',
+    3: 'nv', 4: 'vasc', 5: 'bcc', 6: 'akiec'
+}
 
 @app.route('/')
 def home():
@@ -25,28 +28,31 @@ def home():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    if 'image' not in request.files:
-        return jsonify({"error": "No image uploaded"}), 400
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file uploaded'}), 400
 
-    file = request.files['image']
-    os.makedirs("uploads", exist_ok=True)
-    img_path = os.path.join("uploads", file.filename)
-    file.save(img_path)
+        file = request.files['file']
+        img = load_img(file, target_size=(128, 128))
+        img_array = img_to_array(img) / 255.0
+        img_array = np.expand_dims(img_array, axis=0)
 
-    # Preprocess image
-    img = load_img(img_path, target_size=(128, 128))
-    img_array = img_to_array(img) / 255.0
-    img_array = np.expand_dims(img_array, axis=0)
+        pred = model.predict(img_array, verbose=0)
+        pred_class = int(np.argmax(pred, axis=1)[0])
+        pred_label = label_mapping.get(pred_class, "unknown")
+        confidence = float(pred[0][pred_class] * 100)
 
-    # Predict
-    preds = model.predict(img_array)
-    pred_class = CLASSES[np.argmax(preds)]
-    confidence = float(np.max(preds) * 100)
+        info = disease_info.get(pred_label, {})
+        return jsonify({
+            'predicted_label': pred_label,
+            'full_name': info.get("full_name", "Unknown"),
+            'confidence': confidence,
+            'cause': info.get("cause", "Not specified"),
+            'habit': info.get("habit", "Not specified")
+        })
 
-    return jsonify({
-        "predicted_disease": pred_class,
-        "confidence": round(confidence, 2)
-    })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=10000)
+if __name__ == "__main__":
+    app.run()
