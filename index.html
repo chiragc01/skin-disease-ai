@@ -20,7 +20,8 @@
       }
 
       const formData = new FormData();
-      formData.append("file", fileInput.files[0]); // ✅ key name must be 'file'
+      // ✅ Corrected ID name here
+      formData.append("file", fileInput.files[0]);
 
       try {
         const response = await fetch("https://skin-disease-ai-8ypl.onrender.com/predict", {
