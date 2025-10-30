@@ -9,3 +9,4 @@ tensorflow
 numpy
 pillow
 gunicorn
+flask-cors
