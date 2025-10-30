@@ -1,40 +1,51 @@
-<input type="file" id="imageInput" accept="image/*">
-<button onclick="predictDisease()">Predict Disease</button>
-<p id="result"></p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Skin Disease Predictor</title>
+</head>
+<body>
+  <h2>Upload an image to predict the disease</h2>
+  <input type="file" id="imageUpload" accept="image/*" />
+  <button onclick="predict()">Predict</button>
+  <div id="result"></div>
 
-<script>
-async function predictDisease() {
-  const fileInput = document.getElementById('imageInput');
-  const file = fileInput.files[0];
-  if (!file) {
-    alert("Please select an image first!");
-    return;
-  }
+  <script>
+    async function predict() {
+      const fileInput = document.getElementById("imageUpload");
+      if (!fileInput.files.length) {
+        alert("Please upload an image first!");
+        return;
+      }
 
-  const formData = new FormData();
-  formData.append('file', file);
+      const formData = new FormData();
+      formData.append("file", fileInput.files[0]); // ✅ key name must be 'file'
 
-  try {
-    const response = await fetch("https://skin-disease-ai-8ypl.onrender.com/predict", {
-      method: "POST",
-      body: formData
-    });
+      try {
+        const response = await fetch("https://skin-disease-ai-8ypl.onrender.com/predict", {
+          method: "POST",
+          body: formData,
+        });
 
-    const data = await response.json();
+        if (!response.ok) {
+          const err = await response.text();
+          throw new Error(err);
+        }
 
-    if (data.predicted_label) {
-      document.getElementById('result').innerHTML = `
-        🧠 <b>Disease Code:</b> ${data.predicted_label}<br>
-        🩺 <b>Name:</b> ${data.full_name}<br>
-        📊 <b>Confidence:</b> ${data.confidence.toFixed(2)}%<br>
-        ⚠️ <b>Cause:</b> ${data.cause}<br>
-        🚫 <b>Habit:</b> ${data.habit}
-      `;
-    } else {
-      document.getElementById('result').innerText = "❌ Error predicting. Please try again.";
+        const data = await response.json();
+        document.getElementById("result").innerHTML = `
+          <h3>Predicted: ${data.full_name}</h3>
+          <p><b>Label:</b> ${data.predicted_label}</p>
+          <p><b>Confidence:</b> ${data.confidence.toFixed(2)}%</p>
+          <p><b>Cause:</b> ${data.cause}</p>
+          <p><b>Habit:</b> ${data.habit}</p>
+        `;
+      } catch (error) {
+        console.error(error);
+        document.getElementById("result").innerHTML = "❌ Error predicting. Please try again.";
+      }
     }
-  } catch (err) {
-    document.getElementById('result').innerText = `⚠️ Network error: ${err.message}`;
-  }
-}
-</script>
+  </script>
+</body>
+</html>
