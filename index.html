@@ -22,7 +22,7 @@
       const formData = new FormData();
       formData.append('file', fileInput.files[0]);
 
-      const response = await fetch('https://skin-disease-ai-8ypl.onrender.com/predict', {
+      const response = await fetch('https://skin-disease-ai-8ypl.onrender.com/', {
         method: 'POST',
         body: formData
       });
