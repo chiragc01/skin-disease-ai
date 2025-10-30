@@ -4,3 +4,8 @@ keras
 pillow
 numpy
 gunicorn
+flask
+tensorflow
+numpy
+pillow
+gunicorn

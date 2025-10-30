@@ -6,31 +6,25 @@ import os
 
 app = Flask(__name__)
 
-# -----------------------------
-# Load Model
-# -----------------------------
-MODEL_PATH = "saved_models/skin_disease_model.h5"
-if os.path.exists(MODEL_PATH):
-    model = load_model(MODEL_PATH)
-else:
-    model = None
-    print("⚠️ Warning: Model file not found at", MODEL_PATH)
+# -------------------------------
+# Load model once at startup
+# -------------------------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, "saved_models", "skin_disease_model.h5")
 
-# List of class names (update these as per your model)
-CLASSES = ["Eczema", "Psoriasis", "Acne", "Healthy Skin"]
+print("⏳ Loading model...")
+model = load_model(MODEL_PATH)
+print("✅ Model loaded successfully!")
 
-# -----------------------------
-# Routes
-# -----------------------------
+# Define your class names (update with your real ones)
+CLASSES = ["bkl", "df", "mel", "nv", "vasc", "bcc", "akiec"]
+
 @app.route('/')
 def home():
-    return jsonify({"message": "Skin Disease Prediction API is Live ✅"})
+    return jsonify({"message": "✅ Skin Disease Prediction API is Live!"})
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    if model is None:
-        return jsonify({"error": "Model not loaded on server"}), 500
-
     if 'image' not in request.files:
         return jsonify({"error": "No image uploaded"}), 400
 
@@ -39,26 +33,20 @@ def predict():
     img_path = os.path.join("uploads", file.filename)
     file.save(img_path)
 
-    try:
-        # Preprocess image
-        img = load_img(img_path, target_size=(128, 128))  # adjust as per your model
-        img_array = img_to_array(img) / 255.0
-        img_array = np.expand_dims(img_array, axis=0)
+    # Preprocess image
+    img = load_img(img_path, target_size=(128, 128))
+    img_array = img_to_array(img) / 255.0
+    img_array = np.expand_dims(img_array, axis=0)
 
-        # Predict
-        preds = model.predict(img_array)
-        pred_class = CLASSES[np.argmax(preds)]
+    # Predict
+    preds = model.predict(img_array)
+    pred_class = CLASSES[np.argmax(preds)]
+    confidence = float(np.max(preds) * 100)
 
-        # Clean up the uploaded image
-        os.remove(img_path)
+    return jsonify({
+        "predicted_disease": pred_class,
+        "confidence": round(confidence, 2)
+    })
 
-        return jsonify({"predicted_disease": pred_class})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# -----------------------------
-# Entry point
-# -----------------------------
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 10000))  # ✅ Use Render’s PORT
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=10000)

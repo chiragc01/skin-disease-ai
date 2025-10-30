@@ -11,7 +11,7 @@ data/
 *.png
 
 # Model checkpoints (optional)
-*.h5
+# *.h5
 *.ckpt
 
 # Cache

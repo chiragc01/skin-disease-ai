@@ -10,7 +10,7 @@ import json
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # -------------------------------
-# Paths
+# Correct paths (go one level up)
 # -------------------------------
 MODEL_PATH = os.path.join(BASE_DIR, "..", "saved_models", "skin_disease_model.h5")
 INFO_PATH = os.path.join(BASE_DIR, "..", "data", "disease_info.json")
@@ -21,18 +21,18 @@ IMG_SIZE = 128  # must match training script
 # -------------------------------
 # Debug info
 # -------------------------------
-print(f"🧭 MODEL_PATH = {os.path.abspath(MODEL_PATH)}")
-print(f"🧭 INFO_PATH  = {os.path.abspath(INFO_PATH)}")
-print(f"🧭 TEST_IMAGE_DIR = {os.path.abspath(TEST_IMAGE_DIR)}")
+print(f"🧭 MODEL_PATH       = {os.path.abspath(MODEL_PATH)}")
+print(f"🧭 INFO_PATH        = {os.path.abspath(INFO_PATH)}")
+print(f"🧭 TEST_IMAGE_DIR   = {os.path.abspath(TEST_IMAGE_DIR)}")
 
 # -------------------------------
 # Verify file existence
 # -------------------------------
-if not os.path.exists(INFO_PATH):
-    raise FileNotFoundError(f"❌ Disease info file not found: {INFO_PATH}\nPlease verify location!")
-
 if not os.path.exists(MODEL_PATH):
     raise FileNotFoundError(f"❌ Model file not found: {MODEL_PATH}\nPlease verify location!")
+
+if not os.path.exists(INFO_PATH):
+    raise FileNotFoundError(f"❌ Disease info file not found: {INFO_PATH}\nPlease verify location!")
 
 if not os.path.exists(TEST_IMAGE_DIR):
     raise FileNotFoundError(f"❌ test_images folder not found: {TEST_IMAGE_DIR}\nPlease verify location!")
@@ -40,6 +40,7 @@ if not os.path.exists(TEST_IMAGE_DIR):
 # -------------------------------
 # Load model
 # -------------------------------
+print("⏳ Loading model...")
 model = load_model(MODEL_PATH)
 print("✅ Model loaded successfully!\n")
 
@@ -96,8 +97,8 @@ for img_name in image_files:
     # Display results
     print("\n==================== RESULT ====================")
     print(f"🧠 Predicted Disease Code : {pred_label}")
-    print(f"🩺 Full Disease Name     : {name}")
-    print(f"📊 Confidence            : {confidence:.2f}%")
+    print(f"🩺 Full Disease Name      : {name}")
+    print(f"📊 Confidence             : {confidence:.2f}%")
     print(f"\n⚠️  Cause: {cause}")
     print(f"🚫 Habit/Trigger: {habit}")
     print("\n💡 Advice: Consult a dermatologist for accurate diagnosis.")
