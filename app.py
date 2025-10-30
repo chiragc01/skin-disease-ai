@@ -37,6 +37,11 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
+
+        print("📩 Incoming form data keys:", list(request.files.keys()))
+        print("📨 request.content_type:", request.content_type)
+
+
         if 'file' not in request.files:
             return jsonify({'error': 'No file uploaded. Use form-data with key "file".'}), 400
 
