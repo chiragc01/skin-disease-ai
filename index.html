@@ -15,7 +15,7 @@ async function predictDisease() {
   formData.append('file', file);
 
   try {
-    const response = await fetch("https://skin-disease-ai-8ypl.onrender.com", {
+    const response = await fetch("https://skin-disease-ai-8ypl.onrender.com/predict", {
       method: "POST",
       body: formData
     });

@@ -7,7 +7,8 @@ import json
 import os
 
 app = Flask(__name__)
-CORS(app)
+# ✅ Allow all origins for now
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "saved_models", "skin_disease_model.h5")
@@ -55,4 +56,4 @@ def predict():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host="0.0.0.0", port=10000)
