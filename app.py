@@ -5,15 +5,22 @@ from tensorflow.keras.preprocessing.image import load_img, img_to_array
 import numpy as np
 import json
 import os
+import tempfile
 
 app = Flask(__name__)
-# ✅ Allow all origins for now
+# ✅ Allow all origins (for testing / frontend connection)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
+# -------------------------------
+# Paths
+# -------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "saved_models", "skin_disease_model.h5")
 INFO_PATH = os.path.join(BASE_DIR, "data", "disease_info.json")
 
+# -------------------------------
+# Load model + info
+# -------------------------------
 model = load_model(MODEL_PATH)
 with open(INFO_PATH, "r") as f:
     disease_info = json.load(f)
@@ -23,6 +30,9 @@ label_mapping = {
     3: 'nv', 4: 'vasc', 5: 'bcc', 6: 'akiec'
 }
 
+# -------------------------------
+# Routes
+# -------------------------------
 @app.route('/')
 def home():
     return jsonify({"message": "✅ Skin Disease Prediction API is Live!"})
@@ -30,27 +40,38 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
+        # Check if image exists
         if 'file' not in request.files:
             return jsonify({'error': 'No file uploaded'}), 400
 
         file = request.files['file']
-        img = load_img(file, target_size=(128, 128))
+
+        # ✅ Save temporarily before reading
+        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            file.save(temp_file.name)
+            img = load_img(temp_file.name, target_size=(128, 128))
+
+        # Preprocess image
         img_array = img_to_array(img) / 255.0
         img_array = np.expand_dims(img_array, axis=0)
 
+        # Prediction
         pred = model.predict(img_array, verbose=0)
         pred_class = int(np.argmax(pred, axis=1)[0])
         pred_label = label_mapping.get(pred_class, "unknown")
         confidence = float(pred[0][pred_class] * 100)
 
+        # Disease info
         info = disease_info.get(pred_label, {})
-        return jsonify({
+        result = {
             'predicted_label': pred_label,
             'full_name': info.get("full_name", "Unknown"),
             'confidence': confidence,
             'cause': info.get("cause", "Not specified"),
             'habit': info.get("habit", "Not specified")
-        })
+        }
+
+        return jsonify(result)
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
